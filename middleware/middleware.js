@@ -1,4 +1,4 @@
-import jwt, { decode } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import usersModel from "../models/usersModel.js";
 import adminsModel from "../models/adminsModel.js";
 
@@ -25,9 +25,9 @@ export const authUser = async (req, res, next) => {
       res.status(401).json({ message: "Invalid token type" });
     }
 
-    req.admin = await usersModel.findById(decoded.id).select("-password");
+    req.user = await usersModel.findById(decoded.id).select("-password");
 
-    if (!req.admin) {
+    if (!req.user) {
       return res.status(401).json({ message: "User not found" });
     }
 

@@ -27,11 +27,7 @@ export const createCampaign = async (req, res) => {
       const savedCampaign = await newCampaign.save();
       res.status(201).json({
         message: "New Campaign Created",
-        user: {
-          id: savedCampaign._id,
-          campaignName: savedCampaign.campaignName,
-          campaignStatus: savedCampaign.campaignStatus,
-        },
+        campaign: newCampaign,
       });
     }
   } catch (error) {

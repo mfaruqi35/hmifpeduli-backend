@@ -5,7 +5,7 @@ import {
   getAllUser,
   getUserProfile,
   editProfile,
-} from "../controllers/usersController.js";
+} from "../controllers/userController.js";
 
 const userRouter = express.Router();
 // Auth User

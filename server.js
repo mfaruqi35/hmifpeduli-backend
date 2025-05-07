@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import userRouter from "./routes/usersRoute.js";
 import campaignRouter from "./routes/campaignsRoute.js";
 import adminRouter from "./routes/adminsRoute.js";
+import donationRouter from "./routes/donationsRoute.js";
 
 dotenv.config();
 
@@ -26,5 +27,6 @@ app.use(bodyParser.json());
 app.use("/users", userRouter);
 app.use("/admins", adminRouter);
 app.use("/campaigns", campaignRouter);
+app.use("/donations", donationRouter);
 
 app.listen(PORT, () => console.log(`Server Started in port: ${PORT}`));
