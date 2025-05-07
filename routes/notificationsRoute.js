@@ -12,8 +12,8 @@ const notificationRouter = express.Router();
 
 notificationRouter.post("/", createNotification);
 notificationRouter.get("/", authUser, getUserNotification);
-notificationRouter.patch("/:id/read", markNotificationAsRead);
-notificationRouter.patch("/:id/mark-all-read", markAllAsRead);
-notificationRouter.delete("/:id", deleteNotification);
+notificationRouter.patch("/:id/read", authUser, markNotificationAsRead);
+notificationRouter.patch("/:id/mark-all-read", authUser, markAllAsRead);
+notificationRouter.delete("/:id", authUser, deleteNotification);
 
 export default notificationRouter;

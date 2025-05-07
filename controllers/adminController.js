@@ -1,6 +1,8 @@
 import adminsModel from "../models/adminsModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import donationsModel from "../models/donationsModel.js";
+import notificationsModel from "../models/notificationsModel.js";
 
 const generateAdminToken = (adminId) => {
   try {
@@ -84,6 +86,48 @@ export const loginAdmin = async (req, res) => {
         user: { name: admin.name },
       });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const verifyDonation = async (req, res) => {
+  try {
+    const { donationId } = req.params;
+    const { newStatus } = req.body;
+
+    if (!["Successful", "Abort"].includes(newStatus)) {
+      return res.status(400).json({ message: "Status tidak valid" });
+    }
+
+    const donation = await donationsModel
+      .findById(donationId)
+      .populate("campaignId");
+
+    if (!donation) {
+      return res.status(404).json({ message: "Donasi tidak ditemukan" });
+    }
+
+    donation.donationStatus = newStatus;
+    await donation.save();
+
+    let message;
+    if (newStatus === "Successful") {
+      message = `Donasi kaum untuk kampanye ${donation.campaignId.campaignName} telah berhasil. Terima kasih`;
+    } else if (newStatus === "Abort") {
+      message = `Donasi kamu untuk kampanye ${donation.campaignId.campaignName} dibatalkan`;
+    }
+
+    if (message) {
+      await notificationsModel.create({
+        userId: donation.donaturId,
+        title: "Status Donasi",
+        message,
+        notificationType: "donation",
+      });
+    }
+
+    res.status(200).json({ message: "Status donasi diperbarui" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

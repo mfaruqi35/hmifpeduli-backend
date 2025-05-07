@@ -1,6 +1,7 @@
 import donationsModel from "../models/donationsModel.js";
 import usersModel from "../models/usersModel.js";
 import campaignsModel from "../models/campaignsModel.js";
+import notificationsModel from "../models/notificationsModel.js";
 
 export const createDonation = async (req, res) => {
   try {
@@ -30,23 +31,32 @@ export const createDonation = async (req, res) => {
       donaturId,
       campaignId,
       paymentMethod,
-      donationStatus: "Successful",
+      donationStatus: "Pending",
     });
 
     await newDonation.save();
 
-    campaign.fundCollected += amount;
-    await campaign.save();
+    // campaign.fundCollected += amount;
+    // await campaign.save();
 
-    if (donaturId) {
-      await usersModel.findByIdAndUpdate(donaturId, {
-        $inc: { totalDonasi: amount },
-      });
-    }
+    // if (donaturId) {
+    //   await usersModel.findByIdAndUpdate(donaturId, {
+    //     $inc: { totalDonasi: amount },
+    //   });
+    // }
+    await notificationsModel.create({
+      UserId: req.user._id,
+      title: "Donasi Tertunde",
+      message: `Donasi kamu untuk ${campaign.campaignName} sedang diverifikasi oleh sistem`,
+      notificationType: "donation",
+    });
 
     res
       .status(201)
-      .json({ message: "Donation Successful", donation: newDonation });
+      .json({
+        message: "Donasi dibuat dan sedang diverifikasi",
+        donation: newDonation,
+      });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
