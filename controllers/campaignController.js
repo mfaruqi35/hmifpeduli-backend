@@ -1,4 +1,6 @@
 import campaignsModel from "../models/campaignsModel.js";
+import notificationsModel from "../models/notificationsModel.js";
+import usersModel from "../models/usersModel.js";
 
 export const createCampaign = async (req, res) => {
   try {
@@ -24,11 +26,21 @@ export const createCampaign = async (req, res) => {
         category,
       });
 
-      const savedCampaign = await newCampaign.save();
+      await newCampaign.save();
       res.status(201).json({
         message: "New Campaign Created",
         campaign: newCampaign,
       });
+
+      const users = await usersModel.find();
+      const notification = users.map((user) => ({
+        userId: user._id,
+        title: "Kampanye Baru, Dibuka",
+        message: `Kampanye ${campaignName} telah dibuka, yuk ikut berdonasi`,
+        notificationType: "campaign",
+      }));
+
+      await notificationsModel.insertMany(notification);
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -44,6 +56,7 @@ export const getAllCampaign = async (req, res) => {
           campaign: {
             name: campaign.campaignName,
             target: campaign.fundTarget,
+            collected: campaign.fundCollected,
             category: campaign.category,
           },
           campaignId: campaign._id,

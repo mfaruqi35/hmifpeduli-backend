@@ -100,6 +100,7 @@ export const getAllUser = async (req, res) => {
           user: {
             email: user.email,
             name: user.name,
+            total: user.totalDonasi,
           },
           userId: user._id,
         };
