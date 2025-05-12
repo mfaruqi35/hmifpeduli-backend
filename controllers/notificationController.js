@@ -1,6 +1,7 @@
 import notificationsModel from "../models/notificationsModel.js";
 import usersModel from "../models/usersModel.js";
 
+// Testing
 export const createNotification = async (req, res) => {
   try {
     const { userId, title, message, notificationType } = req.body;
