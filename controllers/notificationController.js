@@ -31,7 +31,7 @@ export const getUserNotification = async (req, res) => {
   }
 };
 
-export const markNotificationAsRead = async (req, res) => {
+export const markAsRead = async (req, res) => {
   try {
     const { id } = req.params;
 

@@ -84,6 +84,7 @@ export const getAllCampaign = async (req, res) => {
             target: campaign.fundTarget,
             collected: campaign.fundCollected,
             category: campaign.category,
+            thumbnail: campaign.thumbnail,
           },
           campaignId: campaign._id,
         };
