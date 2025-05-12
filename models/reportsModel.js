@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const reportSchema = new mongoose.Schema({
+  title: {
+    type: Number,
+    required: true,
+  },
   totalIncomingDonations: {
     type: Number,
     default: 0,

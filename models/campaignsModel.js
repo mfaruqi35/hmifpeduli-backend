@@ -30,9 +30,13 @@ const campaignSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  picture: {
+  thumbnail: {
     type: String,
     required: true,
+  },
+  documentationImages: {
+    type: [String],
+    default: [],
   },
   category: {
     type: String,

@@ -47,7 +47,7 @@ export const registerUser = async (req, res) => {
 
       const savedUser = await newUser.save();
       const token = generateUserToken(newUser._id);
-      res.status(201).json({
+      return res.status(201).json({
         message: "Succesfull Register",
         token: token,
         user: {
@@ -66,7 +66,9 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      res.status(400).json({ message: "Please fill all required fields" });
+      return res
+        .status(400)
+        .json({ message: "Please fill all required fields" });
     } else {
       const user = await usersModel.findOne({ email });
       if (!user) {
@@ -80,7 +82,7 @@ export const loginUser = async (req, res) => {
 
       const token = generateUserToken(usersModel._id);
 
-      res.status(200).json({
+      return res.status(200).json({
         message: "login Successful",
         token: token,
         user: { id: user._id, name: user.name, email: user.email },
@@ -106,7 +108,7 @@ export const getAllUser = async (req, res) => {
         };
       })
     );
-    res.status(200).json(await usersData);
+    return res.status(200).json(await usersData);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -119,7 +121,7 @@ export const getUserProfile = async (req, res) => {
     if (userData == null) {
       return res.status(404).json({ message: "cannot find user" });
     }
-    res.status(200).json(userData);
+    return res.status(200).json(userData);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -131,7 +133,7 @@ export const editProfile = async (req, res) => {
     const { name, email, phoneNumber } = req.body;
     const user = await usersModel.findById(userId);
     if (!user) {
-      res.status(400).json({ message: "User not found" });
+      return res.status(400).json({ message: "User not found" });
     }
     // if (name) user.name = name;
     // if (email) user.email = email;
@@ -143,7 +145,7 @@ export const editProfile = async (req, res) => {
 
     await user.save();
 
-    res
+    return res
       .status(200)
       .json({ message: "Profile updated successfully.", data: user });
   } catch (error) {

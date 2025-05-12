@@ -1,6 +1,8 @@
+import upload from "../middleware/multer.js";
 import campaignsModel from "../models/campaignsModel.js";
 import notificationsModel from "../models/notificationsModel.js";
 import usersModel from "../models/usersModel.js";
+import { uploadToCloudinary } from "../utils/cloudinary.js";
 
 export const createCampaign = async (req, res) => {
   try {
@@ -10,23 +12,47 @@ export const createCampaign = async (req, res) => {
       fundTarget,
       startDate,
       endDate,
-      picture,
       category,
     } = req.body;
-    if (!campaignName || !fundTarget || !startDate || !endDate || !picture) {
+
+    if (!campaignName || !fundTarget || !startDate || !endDate) {
       res.status(400).json({ message: "Please fill all required fields" });
+    }
+    if (!req.files || !req.files["thumbnail"]) {
+      res.status(400).json({ message: "Thumbnail image is required" });
     } else {
+      const thumbnailBuffer = req.files["thumbnail"][0].buffer;
+
+      const thumbnailUpload = await uploadToCloudinary(
+        thumbnailBuffer,
+        "campaign_thumbnails"
+      );
+      const thumbnailUrl = thumbnailUpload.secure_url;
+
+      let documentationUrls = [];
+      if (
+        req.files["documentationImages"] &&
+        req.files["documentationImages"].length > 0
+      ) {
+        const uploadPromise = req.files["documentationImages"].map((file) =>
+          uploadToCloudinary(file.buffer, "campaign_docs")
+        );
+        const uploadResults = await Promise.all(uploadPromise);
+        documentationUrls = uploadResults.map((result) => result.secure_url);
+      }
       const newCampaign = new campaignsModel({
         campaignName,
         description,
         fundTarget,
         startDate,
         endDate,
-        picture,
+        thumbnail: thumbnailUrl,
+        documentationImages: documentationUrls,
         category,
       });
 
       await newCampaign.save();
+
       res.status(201).json({
         message: "New Campaign Created",
         campaign: newCampaign,
@@ -96,7 +122,7 @@ export const editCampaign = async (req, res) => {
       "campaignStatus",
       "startDate",
       "endDate",
-      "picture",
+      "thumbnail",
       "category",
     ];
 
