@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import donationsModel from "../models/donationsModel.js";
 import notificationsModel from "../models/notificationsModel.js";
+import campaignsModel from "../models/campaignsModel.js";
 
 const generateAdminToken = (adminId) => {
   try {
@@ -108,11 +109,22 @@ export const verifyDonation = async (req, res) => {
       return res.status(404).json({ message: "Donasi tidak ditemukan" });
     }
 
+    if (
+      donation.donationStatus === "Successful" ||
+      donation.donationStatus === "Abort"
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Donasi sudah diverifikasi sebelumnya" });
+    }
+
     donation.donationStatus = newStatus;
     await donation.save();
 
     let message;
     if (newStatus === "Successful") {
+      donation.campaignId.fundCollected += donation.amount;
+      await donation.campaignId.save();
       message = `Donasi kaum untuk kampanye ${donation.campaignId.campaignName} telah berhasil. Terima kasih`;
     } else if (newStatus === "Abort") {
       message = `Donasi kamu untuk kampanye ${donation.campaignId.campaignName} dibatalkan`;

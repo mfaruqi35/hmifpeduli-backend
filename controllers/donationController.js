@@ -6,7 +6,7 @@ import notificationsModel from "../models/notificationsModel.js";
 export const createDonation = async (req, res) => {
   try {
     const { amount, campaignId, paymentMethod } = req.body;
-    const donaturId = req.usersModel?.id || null;
+    const donaturId = req.user?.id || null;
 
     if (!amount || !campaignId || !paymentMethod) {
       return res.status(400).json({ message: "All fields are required" });
@@ -21,7 +21,7 @@ export const createDonation = async (req, res) => {
     if (donaturId) {
       const user = await usersModel.findById(donaturId);
       if (user) {
-        donaturName = usersModel.name;
+        donaturName = user.name;
       }
     }
 
@@ -44,19 +44,19 @@ export const createDonation = async (req, res) => {
     //     $inc: { totalDonasi: amount },
     //   });
     // }
-    await notificationsModel.create({
-      UserId: req.user._id,
-      title: "Donasi Tertunde",
-      message: `Donasi kamu untuk ${campaign.campaignName} sedang diverifikasi oleh sistem`,
-      notificationType: "donation",
-    });
-
-    res
-      .status(201)
-      .json({
-        message: "Donasi dibuat dan sedang diverifikasi",
-        donation: newDonation,
+    if (req.user?._id) {
+      await notificationsModel.create({
+        userId: req.user._id,
+        title: "Donasi Tertunda",
+        message: `Donasi kamu untuk ${campaign.campaignName} sedang diverifikasi oleh sistem`,
+        notificationType: "donation",
       });
+    }
+
+    res.status(201).json({
+      message: "Donasi dibuat dan sedang diverifikasi",
+      donation: newDonation,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

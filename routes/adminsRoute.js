@@ -13,4 +13,5 @@ adminRouter.post("/register", registerAdmin);
 adminRouter.post("/login", loginAdmin);
 
 adminRouter.patch("/verify-donation/:donationId", authAdmin, verifyDonation);
+
 export default adminRouter;
