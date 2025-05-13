@@ -8,6 +8,7 @@ import campaignRouter from "./routes/campaignsRoute.js";
 import adminRouter from "./routes/adminsRoute.js";
 import donationRouter from "./routes/donationsRoute.js";
 import notificationRouter from "./routes/notificationsRoute.js";
+import allocationRouter from "./routes/allocationRoute.js";
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.use("/users", userRouter);
 app.use("/admins", adminRouter);
 app.use("/campaigns", campaignRouter);
 app.use("/donations", donationRouter);
+app.use("/allocations", allocationRouter);
 app.use("/notifications", notificationRouter);
 
 app.listen(PORT, () => console.log(`Server Started in port: ${PORT}`));

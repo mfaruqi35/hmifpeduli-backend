@@ -25,6 +25,7 @@ const reportSchema = new mongoose.Schema({
   campaignId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
+    ref: "Campaign",
   },
 });
 

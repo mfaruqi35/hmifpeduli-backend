@@ -12,10 +12,12 @@ const donationSchema = new mongoose.Schema({
   donaturId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: true,
   },
   campaignId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Campaign",
+    required: true,
   },
   donationDate: {
     type: Date,

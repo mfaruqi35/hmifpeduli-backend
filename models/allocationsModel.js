@@ -7,7 +7,7 @@ const allocationSchema = new mongoose.Schema({
   },
   totalAllocated: {
     type: Number,
-    default: 0,
+    required: true,
     min: 0,
   },
   description: {
@@ -16,6 +16,7 @@ const allocationSchema = new mongoose.Schema({
   campaignId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
+    ref: "Campaign",
   },
 });
 
