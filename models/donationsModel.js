@@ -31,6 +31,10 @@ const donationSchema = new mongoose.Schema({
     enum: ["BCA", "BSI", "Mandiri", "Dana", "Ovo", "Gopay"],
     required: true,
   },
+  proofImage: {
+    type: String,
+    required: true,
+  },
 });
 
 export default mongoose.model("Donation", donationSchema);

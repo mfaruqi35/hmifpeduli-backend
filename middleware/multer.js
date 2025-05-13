@@ -16,4 +16,10 @@ const upload = multer({
   },
 });
 
+export const uploadImages = upload.fields([
+  { name: "thumbnail", maxCount: 1 },
+  { name: "documentationImages", maxCount: 10 },
+  { name: "proofImage", maxCount: 1 },
+]);
+
 export default upload;

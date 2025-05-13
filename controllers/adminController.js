@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import donationsModel from "../models/donationsModel.js";
 import notificationsModel from "../models/notificationsModel.js";
 import campaignsModel from "../models/campaignsModel.js";
+import usersModel from "../models/usersModel.js";
 
 const generateAdminToken = (adminId) => {
   try {
@@ -123,6 +124,16 @@ export const verifyDonation = async (req, res) => {
 
     let message;
     if (newStatus === "Successful") {
+      if (donation.donaturId) {
+        await usersModel.findByIdAndUpdate(donation.donaturId, {
+          $push: {
+            historiDonasi: {
+              tanggal: new Date(),
+              jumlahDonasi: donation.amount,
+            },
+          },
+        });
+      }
       donation.campaignId.fundCollected += donation.amount;
       await donation.campaignId.save();
       message = `Donasi kaum untuk kampanye ${donation.campaignId.campaignName} telah berhasil. Terima kasih`;
