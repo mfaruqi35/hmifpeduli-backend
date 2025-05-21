@@ -1,5 +1,4 @@
 import adminsModel from "../models/adminsModel.js";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const generateAdminToken = (adminId) => {
@@ -22,68 +21,58 @@ const generateAdminToken = (adminId) => {
   }
 };
 
-export const registerAdmin = async (req, res) => {
+export const loginAdmin = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
-      res.status(400).json({ message: "Please fill all required fields" });
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Please fill all required fields" });
     }
 
-    const isAlreadyRegistered = await adminsModel.findOne({ email });
-    if (isAlreadyRegistered) {
-      return res
-        .status(400)
-        .json({ message: "Admin with this email is already registered" });
-    } else {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      const newAdmin = new adminsModel({
-        name,
-        email,
-        password: hashedPassword,
-      });
-
-      const savedAdmin = await newAdmin.save();
-      const token = generateAdminToken(newAdmin._id);
-      res.status(200).json({
-        message: "Admin Successfully registered",
-        token: token,
-        admin: {
-          id: savedAdmin._id,
-          name: savedAdmin.name,
-          email: savedAdmin.email,
-        },
-      });
+    const admin = await adminsModel.findOne({ email });
+    if (!admin) {
+      return res.status(400).json({ message: "Admin not found" });
     }
+
+    // Cek password secara langsung (tanpa hash)
+    if (password !== admin.password) {
+      return res.status(400).json({ message: "Password incorrect" });
+    }
+
+    const token = generateAdminToken(admin._id);
+
+    res.status(200).json({
+      message: "Login Successful",
+      token: token,
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-export const loginAdmin = async (req, res) => {
+// Fungsi untuk mendapatkan profil admin
+export const getAdminProfile = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      res.status(400).json({ message: "Please fill all required fields" });
-    } else {
-      const admin = await adminsModel.findOne({ email });
-      if (!admin) {
-        res.status(400).json({ message: "Admin not found" });
-      }
+    const admin = req.admin;
 
-      const isMatch = await bcrypt.compare(password, admin.password);
-      if (!isMatch) {
-        return res.status(400).json({ message: "Password incorrect" });
-      }
-
-      const token = generateAdminToken(adminsModel._id);
-
-      res.status(200).json({
-        message: "Login Successful",
-        token: token,
-        user: { name: admin.name },
-      });
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
     }
+
+    // Kembalikan dalam objek { admin: {...} }
+    res.status(200).json({
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        phoneNumber: admin.phoneNumber,
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

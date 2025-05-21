@@ -1,151 +1,142 @@
-import usersModel from "../models/usersModel.js";
+import User from "../models/usersModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const generateUserToken = (userId) => {
-  try {
-    if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET is not defined in environment variables");
-      return null;
-    }
-
-    const token = jwt.sign(
-      { id: userId, type: "user" },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    return token;
-  } catch (error) {
-    console.error("Error generating token:", error);
-    return null;
-  }
+// Fungsi untuk membuat JWT token
+const generateToken = (userId) => {
+  return jwt.sign({ id: userId, type: "user" }, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
 };
 
+// Fungsi Registrasi Pengguna
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Please fill all required fields" });
+
+    // Pastikan semua data dikirimkan
+    if (!name || !email || !password)
+      return res.status(400).json({ message: "All fields required" });
+
+    // Cek apakah email sudah terdaftar
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email sudah terdaftar" });
     }
 
-    const isAlreadyRegistered = await usersModel.findOne({ email });
-    if (isAlreadyRegistered) {
-      return res
-        .status(400)
-        .json({ message: "User with this email is already registered" });
-    } else {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      const newUser = new usersModel({
-        name,
-        email,
-        password: hashedPassword,
-      });
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('Hashed Password:', hashedPassword); // Log hashed password
 
-      const savedUser = await newUser.save();
-      const token = generateUserToken(newUser._id);
-      res.status(201).json({
-        message: "Succesfull Register",
-        token: token,
-        user: {
-          id: savedUser._id,
-          name: savedUser.name,
-          email: savedUser.email,
-        },
-      });
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    // Simpan data pengguna baru ke database
+    const newUser = new User({ name, email, password: hashedPassword });
+    await newUser.save();
+
+    // Generate token
+    const token = generateToken(newUser._id);
+
+    // Kirim response sukses
+    res.status(201).json({
+      message: "Registrasi berhasil",
+      token,
+      user: { id: newUser._id, name: newUser.name, email: newUser.email },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
+// Fungsi Login Pengguna
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      res.status(400).json({ message: "Please fill all required fields" });
-    } else {
-      const user = await usersModel.findOne({ email });
-      if (!user) {
-        return res.status(400).json({ message: "User not found" });
-      }
 
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ message: "Password incorrect" });
-      }
+    // Pastikan email dan password dikirimkan
+    if (!email || !password)
+      return res.status(400).json({ message: "All fields required" });
 
-      const token = generateUserToken(usersModel._id);
+    // Cari pengguna berdasarkan email
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "Pengguna tidak ditemukan" });
 
-      res.status(200).json({
-        message: "login Successful",
-        token: token,
-        user: { id: user._id, name: user.name, email: user.email },
-      });
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.log("User password from DB:", user.password); // Log password dari DB
+    console.log("Input password:", password); // Log password yang dimasukkan
+
+    // Cek apakah password yang dimasukkan sesuai dengan hash di database
+    const isMatch = await bcrypt.compare(password, user.password);
+    console.log("Password match status:", isMatch); // Log status perbandingan
+
+    if (!isMatch)
+      return res.status(400).json({ message: "Password salah" });
+
+    // Generate token
+    const token = generateToken(user._id);
+
+    // Kirim response sukses
+    res.status(200).json({
+      message: "Login berhasil",
+      token,
+      user: { id: user._id, name: user.name, email: user.email },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-export const getAllUser = async (req, res) => {
-  try {
-    const users = await usersModel.find();
-    const usersData = Promise.all(
-      users.map(async (user) => {
-        return {
-          user: {
-            email: user.email,
-            name: user.name,
-          },
-          userId: user._id,
-        };
-      })
-    );
-    res.status(200).json(await usersData);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
+// Fungsi untuk mendapatkan profil pengguna
 export const getUserProfile = async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const userData = await usersModel.findById(userId);
-    if (userData == null) {
-      return res.status(404).json({ message: "cannot find user" });
-    }
-    res.status(200).json(userData);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    const userId = req.user.id; // Mengambil ID pengguna dari request yang sudah terverifikasi
+    const user = await User.findById(userId).select("-password"); // Mengambil data pengguna tanpa password
 
-export const editProfile = async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const { name, email, phoneNumber } = req.body;
-    const user = await usersModel.findById(userId);
     if (!user) {
-      res.status(400).json({ message: "User not found" });
+      return res.status(404).json({ message: "Pengguna tidak ditemukan" });
     }
-    // if (name) user.name = name;
-    // if (email) user.email = email;
-    // if (phoneNumber) user.phoneNumber = phoneNumber;
 
-    user.set("name", name);
-    user.set("email", email);
-    user.set("phoneNumber", phoneNumber);
-
-    await user.save();
-
-    res
-      .status(200)
-      .json({ message: "Profile updated successfully.", data: user });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(200).json({ user });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
+
+// Fungsi untuk memperbarui profil pengguna
+import usersModel from '../models/usersModel.js';
+
+export const updateUserProfile = async (req, res) => {
+  try {
+    const user = await usersModel.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Pengguna tidak ditemukan" });
+    }
+
+    const { name, email, phone } = req.body;
+
+    // Validasi nomor HP internasional jika diberikan
+    if (phone) {
+      const phoneRegex = /^\+?[1-9]\d{7,14}$/;
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({ message: "Nomor HP tidak valid. Harus terdiri dari 8-15 digit dan boleh diawali dengan +" });
+      }
+    }
+
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.phoneNumber = phone || user.phoneNumber;
+
+    const updatedUser = await user.save();
+
+    return res.json({
+      user: {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phoneNumber: updatedUser.phoneNumber,
+      },
+    });
+  } catch (error) {
+    console.error("Update error:", error); 
+    return res.status(500).json({ message: "Server error saat update profile" });
+  }
+};
+

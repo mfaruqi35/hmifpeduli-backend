@@ -1,20 +1,22 @@
+// routes/userRoute
+
 import express from "express";
-import {
-  registerUser,
-  loginUser,
-  getAllUser,
-  getUserProfile,
-  editProfile,
-} from "../controllers/usersController.js";
+import { authUser } from "../middleware/middleware.js"; // Mengimpor middleware
+import { registerUser, loginUser } from "../controllers/userController.js";
+import { getUserProfile } from "../controllers/userController.js"; // Controller untuk mendapatkan profil
+import { updateUserProfile } from '../controllers/userController.js';
 
-const userRouter = express.Router();
-// Auth User
-userRouter.post("/register", registerUser);
-userRouter.post("/login", loginUser);
+const router = express.Router();
 
-//Profile
-userRouter.get("/", getAllUser);
-userRouter.get("/:userId", getUserProfile);
-userRouter.put("/profile/:userId", editProfile);
+// Route untuk registrasi pengguna
+router.post("/register", registerUser);
 
-export default userRouter;
+// Route untuk login pengguna
+router.post("/login", loginUser);
+
+// Route untuk mendapatkan profil pengguna, hanya bisa diakses oleh pengguna yang sudah login
+router.get("/profile", authUser, getUserProfile);
+
+router.put('/profile', authUser, updateUserProfile);
+
+export default router;

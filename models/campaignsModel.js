@@ -23,15 +23,20 @@ const campaignSchema = new mongoose.Schema({
   },
   startDate: {
     type: Date,
-    default: Date.now,
     required: true,
   },
   endDate: {
     type: Date,
     required: true,
+    validate: {
+      validator: function (v) {
+        return v > this.startDate;
+      },
+      message: "End date must be after start date",
+    },
   },
-  picture: {
-    type: String,
+  pictures: {
+    type: [String], // array of Base64 strings or image URLs
     required: true,
   },
   category: {
@@ -39,10 +44,42 @@ const campaignSchema = new mongoose.Schema({
     enum: ["Kesehatan", "Edukasi", "Kemanusiaan", "Lainnya"],
     default: "Lainnya",
   },
-  // adminId: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: "Admin",
-  // },
+
+  // Informasi metode transfer
+  bankInfo: {
+    bankName: {
+      type: String,
+      required: true,
+    },
+    accountNumber: {
+      type: String,
+      required: true,
+    },
+    accountName: {
+      type: String,
+      required: true,
+    },
+    bankCode: {
+      type: String,
+      required: true,
+    },
+  },
+
+  // Informasi contact person
+  contactPerson: {
+    name: {
+      type: String,
+      required: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+    },
+  },
 });
 
 export default mongoose.model("Campaign", campaignSchema);
