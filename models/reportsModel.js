@@ -1,13 +1,8 @@
 import mongoose from "mongoose";
 
 const reportSchema = new mongoose.Schema({
-  campaignId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Campaign",
-    required: true,
-  },
-  campaignName: {
-    type: String,
+  title: {
+    type: Number,
     required: true,
   },
   totalIncomingDonations: {
@@ -65,9 +60,10 @@ const reportSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  campaignImages: {
-    type: [String], // array gambar
-    required: false,
+  campaignId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "Campaign",
   },
   reportStatus: {
     type: String,

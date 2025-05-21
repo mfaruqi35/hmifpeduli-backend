@@ -1,10 +1,13 @@
 // routes/userRoute
 
 import express from "express";
-import { authUser } from "../middleware/middleware.js"; // Mengimpor middleware
-import { registerUser, loginUser } from "../controllers/userController.js";
-import { getUserProfile } from "../controllers/userController.js"; // Controller untuk mendapatkan profil
-import { updateUserProfile } from '../controllers/userController.js';
+import {
+  registerUser,
+  loginUser,
+  getAllUser,
+  getUserProfile,
+  editProfile,
+} from "../controllers/userController.js";
 
 const router = express.Router();
 

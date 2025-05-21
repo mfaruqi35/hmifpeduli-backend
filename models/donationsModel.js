@@ -12,10 +12,12 @@ const donationSchema = new mongoose.Schema({
   donaturId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: true,
   },
   campaignId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Campaign",
+    required: true,
   },
   donationDate: {
     type: Date,
@@ -31,9 +33,9 @@ const donationSchema = new mongoose.Schema({
     enum: ["BCA", "BSI", "Mandiri", "Dana", "Ovo", "Gopay"],
     required: true,
   },
-  proof: {
-    type: String, // biasanya berupa string Base64 atau URL ke file gambar
-    required: true, // tergantung apakah kamu mau proof wajib
+  proofImage: {
+    type: String,
+    required: true,
   },
 });
 

@@ -27,7 +27,6 @@ export const authUser = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid token type" });
     }
 
-    // Temukan pengguna berdasarkan ID yang ada dalam token
     req.user = await usersModel.findById(decoded.id).select("-password");
 
     if (!req.user) {

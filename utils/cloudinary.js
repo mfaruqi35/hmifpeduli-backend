@@ -9,13 +9,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadToCloudinary = (buffer, folder, alias = null) => {
+export const uploadToCloudinary = (buffer, folder) => {
   return new Promise((resolve, reject) => {
-    const options = { folder };
-    if (alias) options.public_id = alias;
-
     const stream = cloudinary.uploader.upload_stream(
-      options,
+      { folder },
       (error, result) => {
         if (error) return reject(error);
         resolve(result);

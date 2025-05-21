@@ -35,9 +35,13 @@ const campaignSchema = new mongoose.Schema({
       message: "End date must be after start date",
     },
   },
-  pictures: {
-    type: [String], // array of Base64 strings or image URLs
+  thumbnail: {
+    type: String,
     required: true,
+  },
+  documentationImages: {
+    type: [String],
+    default: [],
   },
   category: {
     type: String,

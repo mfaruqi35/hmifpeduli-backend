@@ -1,13 +1,16 @@
 import express from "express";
-import { loginAdmin, getAdminProfile } from "../controllers/adminController.js";
-import { authAdmin } from "../middleware/middleware.js"; // Middleware untuk auth token admin
+import {
+  loginAdmin,
+  registerAdmin,
+  verifyDonation,
+} from "../controllers/adminController.js";
+import { authAdmin } from "../middleware/middleware.js";
 
 const adminRouter = express.Router();
 
 // Auth Admin
 adminRouter.post("/login", loginAdmin);
 
-// Endpoint untuk mendapatkan profil admin
-adminRouter.get("/profile", authAdmin, getAdminProfile);
+adminRouter.patch("/verify-donation/:donationId", authAdmin, verifyDonation);
 
 export default adminRouter;

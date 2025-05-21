@@ -6,9 +6,9 @@ import mongoose from "mongoose";
 import userRouter from "./routes/usersRoute.js";
 import campaignRouter from "./routes/campaignsRoute.js";
 import adminRouter from "./routes/adminsRoute.js";
-import uploadRouter from "./routes/uploadRoute.js";
 import donationRouter from "./routes/donationsRoute.js";
-import reportRouter from "./routes/reportRoute.js";
+import notificationRouter from "./routes/notificationsRoute.js";
+import allocationRouter from "./routes/allocationRoute.js";
 
 dotenv.config();
 
@@ -33,9 +33,9 @@ app.use(express.urlencoded({ limit: "50mb", extended: true })); // Limit URL enc
 app.use("/users", userRouter);
 app.use("/admins", adminRouter);
 app.use("/campaigns", campaignRouter);
-app.use("/upload", uploadRouter);
 app.use("/donations", donationRouter);
-app.use("/reports", reportRouter);
+app.use("/allocations", allocationRouter);
+app.use("/notifications", notificationRouter);
 
 // Start the server
 app.listen(PORT, () => console.log(`Server Started on port: ${PORT}`));

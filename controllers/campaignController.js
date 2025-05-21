@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 import validator from "validator";
+import upload from "../middleware/multer.js";
 import campaignsModel from "../models/campaignsModel.js";
+import notificationsModel from "../models/notificationsModel.js";
+import usersModel from "../models/usersModel.js";
+import { uploadToCloudinary } from "../utils/cloudinary.js";
 
 // Fungsi validasi
 const isValidEmail = (email) => validator.isEmail(email);
@@ -15,80 +19,65 @@ export const createCampaign = async (req, res) => {
       fundTarget,
       startDate,
       endDate,
-      pictures,
       category,
       campaignStatus,
       bankInfo,
       contactPerson,
     } = req.body;
 
-    if (
-      !campaignName ||
-      !fundTarget ||
-      !startDate ||
-      !endDate ||
-      !pictures ||
-      !Array.isArray(pictures) ||
-      pictures.length === 0 ||
-      !bankInfo ||
-      !contactPerson
-    ) {
-      return res.status(400).json({
-        message: "Please fill all required fields including pictures, bankInfo, and contactPerson",
+    if (!campaignName || !fundTarget || !startDate || !endDate) {
+      res.status(400).json({ message: "Please fill all required fields" });
+    }
+    if (!req.files || !req.files["thumbnail"]) {
+      res.status(400).json({ message: "Thumbnail image is required" });
+    } else {
+      const thumbnailBuffer = req.files["thumbnail"][0].buffer;
+
+      const thumbnailUpload = await uploadToCloudinary(
+        thumbnailBuffer,
+        "campaign_thumbnails"
+      );
+      const thumbnailUrl = thumbnailUpload.secure_url;
+
+      let documentationUrls = [];
+      if (
+        req.files["documentationImages"] &&
+        req.files["documentationImages"].length > 0
+      ) {
+        const uploadPromise = req.files["documentationImages"].map((file) =>
+          uploadToCloudinary(file.buffer, "campaign_docs")
+        );
+        const uploadResults = await Promise.all(uploadPromise);
+        documentationUrls = uploadResults.map((result) => result.secure_url);
+      }
+      const newCampaign = new campaignsModel({
+        campaignName,
+        description,
+        fundTarget,
+        startDate,
+        endDate,
+        thumbnail: thumbnailUrl,
+        documentationImages: documentationUrls,
+        category,
       });
-    }
 
-    // Validasi gambar
-    const isValidBase64 = pictures.every((pic) =>
-      /^data:image\/(png|jpeg|jpg|webp);base64,/.test(pic)
-    );
-    if (!isValidBase64) {
-      return res.status(400).json({ message: "All pictures must be Base64-encoded images" });
-    }
+      await newCampaign.save();
 
-    // Validasi bankInfo
-    const { bankName, accountNumber, accountName, bankCode } = bankInfo;
-    if (!bankName || !accountNumber || !accountName || !bankCode) {
-      return res.status(400).json({ message: "All bankInfo fields are required" });
-    }
-    if (!isValidAccountNumber(accountNumber)) {
-      return res.status(400).json({ message: "Invalid account number format" });
-    }
+      res.status(201).json({
+        message: "New Campaign Created",
+        campaign: newCampaign,
+      });
 
-    // Validasi contactPerson
-    const { name, phone, email } = contactPerson;
-    if (!name || !phone || !email) {
-      return res.status(400).json({ message: "All contactPerson fields are required" });
-    }
-    if (!isValidEmail(email)) {
-      return res.status(400).json({ message: "Invalid email format" });
-    }
-    if (!isValidPhone(phone)) {
-      return res.status(400).json({ message: "Invalid phone number format" });
-    }
+      const users = await usersModel.find();
+      const notification = users.map((user) => ({
+        userId: user._id,
+        title: "Kampanye Baru, Dibuka",
+        message: `Kampanye ${campaignName} telah dibuka, yuk ikut berdonasi`,
+        notificationType: "campaign",
+      }));
 
-    const newCampaign = new campaignsModel({
-      campaignName,
-      description,
-      fundTarget,
-      startDate,
-      endDate,
-      pictures,
-      category,
-      campaignStatus,
-      bankInfo,
-      contactPerson,
-    });
-
-    const savedCampaign = await newCampaign.save();
-    res.status(201).json({
-      message: "New Campaign Created",
-      campaign: {
-        id: savedCampaign._id,
-        campaignName: savedCampaign.campaignName,
-        campaignStatus: savedCampaign.campaignStatus,
-      },
-    });
+      await notificationsModel.insertMany(notification);
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -106,12 +95,7 @@ export const getAllCampaign = async (req, res) => {
             target: campaign.fundTarget,
             collected: campaign.fundCollected,
             category: campaign.category,
-            image: campaign.pictures[0],
-            status: campaign.campaignStatus,
-            startDate: campaign.startDate,
-            endDate: campaign.endDate,
-            bankInfo: campaign.bankInfo,
-            contactPerson: campaign.contactPerson,
+            thumbnail: campaign.thumbnail,
           },
           campaignId: campaign._id,
         };
@@ -160,7 +144,7 @@ export const editCampaign = async (req, res) => {
       "campaignStatus",
       "startDate",
       "endDate",
-      "pictures",
+      "thumbnail",
       "category",
     ];
 
